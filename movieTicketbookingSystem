@@ -1,0 +1,280 @@
+Design an online movie ticket booking system that allows users to select movies, view showtimes, choose seats, and make payments. 
+The system will have two types of users: customers and administrators. Customers can browse movies, book tickets, and make payments, 
+while administrators can onboard theaters and add new movies.
+
+Requirements:
+Functional Requirements:
+Users should be able to:
+
+Browse movies and showtimes.
+Select a theater and a movie.
+Choose available seats and book tickets.
+Make payments for the booked tickets.
+Administrators should be able to:
+
+Add new movies.
+Add and manage theaters.
+Schedule movie showtimes.
+Non-functional Requirements:
+The system should handle multiple users and showtimes simultaneously.
+The system should be scalable and responsive to handle a high number of users.
+
+3. Use Cases:
+Browse Movies:
+
+Users can browse the list of available movies and showtimes.
+Book Tickets:
+
+Users select a movie, showtime, and theater, choose seats, and book tickets.
+Process Payment:
+
+Users can make payments to confirm their bookings.
+Add Movies and Theaters (Admin Use Case):
+
+Admins can add and update movies, theaters, and showtimes.
+
+Class Identification:
+OnlineBookingSystem: Manages the overall system and provides methods to retrieve movies and theaters.
+User: Base class for both customers and admins.
+Customer, Admin: Inherits from User and represents customer and admin functionalities.
+Movie: Represents a movie, including its name, actors, and available showtimes.
+Theater: Represents a theater, containing multiple shows and seating arrangements.
+Show: Represents a single show for a movie at a specific time and theater.
+Seat: Represents a single seat in a theater.
+Ticket: Contains details of the ticket, including the booked movie, show, and seat.
+Payment: Handles payment processing for ticket bookings.
+
++-------------------+       +------------------+       +-------------------+
+|  OnlineBookingSys |<----->|    Movie          |<----->|     Show           |
++-------------------+       +------------------+       +-------------------+
+| + movies[]        |       | + showtimes[]     |       | + theater          |
+| + theaters[]      |       | + actors          |       | + seats[]          |
+| + getAllMovies()  |       +------------------+       | + showtime         |
+| + getAllTheaters()|                                   +-------------------+
+
++-------------------+       +------------------+       +-------------------+
+|     User          |<----->|    Theater       |<----->|      Ticket        |
++-------------------+       +------------------+       +-------------------+
+| + name            |       | + shows[]        |       | + movie            |
+| + address         |       | + location       |       | + show             |
+| + userType        |       +------------------+       | + seats[]          |
++-------------------+                                   +-------------------+
+        ^
+        |
++-------+-------+
+| Customer | Admin |
++----------+-------+
+
++-------------------+
+|     Payment       |
++-------------------+
+| + processPayment()|
++-------------------+
+
+public class OnlineBookingSystem {
+    private List<Movie> movies;
+    private List<Theater> theaters;
+
+    public OnlineBookingSystem(List<Movie> movies, List<Theater> theaters) {
+        this.movies = movies;
+        this.theaters = theaters;
+    }
+
+    public List<Movie> getAllMovies() {
+        return movies;
+    }
+
+    public List<Theater> getAllTheaters() {
+        return theaters;
+    }
+
+    public Movie getMovieByActor(String actorName) {
+        for (Movie movie : movies) {
+            if (movie.getActor().equals(actorName)) {
+                return movie;
+            }
+        }
+        return null;
+    }
+
+    public boolean bookTicket(String movieName, Date showTime, int numberOfTickets, Customer customer) {
+        for (Movie movie : movies) {
+            if (movie.getMovieName().equals(movieName)) {
+                Show show = movie.getShowByTime(showTime);
+                return show.bookSeats(numberOfTickets, customer);
+            }
+        }
+        return false;
+    }
+}
+
+public abstract class User {
+    private String username;
+    private String mobileNumber;
+    private String address;
+    private String userType;
+
+    public User(String username, String mobileNumber, String address, String userType) {
+        this.username = username;
+        this.mobileNumber = mobileNumber;
+        this.address = address;
+        this.userType = userType;
+    }
+    
+    // Getters and setters
+}
+
+public class Customer extends User {
+    public Customer(String username, String mobileNumber, String address) {
+        super(username, mobileNumber, address, "Customer");
+    }
+
+    public void browseMovies(OnlineBookingSystem system) {
+        List<Movie> movies = system.getAllMovies();
+        // Display movies to the customer
+    }
+
+    public boolean bookTickets(String movieName, Date showTime, int numberOfTickets, OnlineBookingSystem system) {
+        return system.bookTicket(movieName, showTime, numberOfTickets, this);
+    }
+}
+
+public class Admin extends User {
+    public Admin(String username, String mobileNumber, String address) {
+        super(username, mobileNumber, address, "Admin");
+    }
+
+    public void addMovie(Movie movie, OnlineBookingSystem system) {
+        system.getAllMovies().add(movie);
+    }
+
+    public void addTheater(Theater theater, OnlineBookingSystem system) {
+        system.getAllTheaters().add(theater);
+    }
+}
+
+public class Movie {
+    private String movieName;
+    private String actorName;
+    private String genre;
+    private Theater theater;
+    private List<Show> showTimes;
+
+    public Movie(String movieName, String actorName, String genre, Theater theater, List<Show> showTimes) {
+        this.movieName = movieName;
+        this.actorName = actorName;
+        this.genre = genre;
+        this.theater = theater;
+        this.showTimes = showTimes;
+    }
+
+    public Show getShowByTime(Date showTime) {
+        for (Show show : showTimes) {
+            if (show.getShowtime().equals(showTime)) {
+                return show;
+            }
+        }
+        return null;
+    }
+
+    // Getters and setters
+}
+
+public class Show {
+    private Theater theater;
+    private Date showtime;
+    private List<Seat> seats;
+
+    public Show(Theater theater, Date showtime, List<Seat> seats) {
+        this.theater = theater;
+        this.showtime = showtime;
+        this.seats = seats;
+    }
+
+    public boolean bookSeats(int numberOfTickets, Customer customer) {
+        int booked = 0;
+        for (Seat seat : seats) {
+            if (seat.isAvailable()) {
+                seat.book(customer);
+                booked++;
+                if (booked == numberOfTickets) return true;
+            }
+        }
+        return false; // Not enough seats
+    }
+
+    // Getters and setters
+}
+
+public class Seat {
+    private boolean isAvailable;
+    private Customer bookedBy;
+
+    public Seat() {
+        this.isAvailable = true;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void book(Customer customer) {
+        this.isAvailable = false;
+        this.bookedBy = customer;
+    }
+
+    // Getters and setters
+}
+
+public class Theater {
+    private String name;
+    private String location;
+    private List<Show> shows;
+
+    public Theater(String name, String location, List<Show> shows) {
+        this.name = name;
+        this.location = location;
+        this.shows = shows;
+    }
+
+    // Getters and setters
+}
+
+public class Ticket {
+    private double price;
+    private Movie movie;
+    private Show show;
+    private Seat seat;
+    private Customer customer;
+
+    public Ticket(Movie movie, Show show, Seat seat, Customer customer) {
+        this.movie = movie;
+        this.show = show;
+        this.seat = seat;
+        this.customer = customer;
+        this.price = calculatePrice();
+    }
+
+    private double calculatePrice() {
+        // Pricing logic based on seat type, time, etc.
+        return 10.0; // Example static price
+    }
+
+    // Getters and setters
+}
+
+public class Payment {
+    private String paymentId;
+    private double amount;
+    private boolean isProcessed;
+
+    public boolean processPayment(Customer customer, double amount) {
+        this.amount = amount;
+        this.isProcessed = true;
+        return true; // Payment successful
+    }
+
+    // Getters and setters
+}
+
+
