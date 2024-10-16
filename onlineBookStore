@@ -1,0 +1,159 @@
+OnlineBookStore:
+### Main Classes & Relationships
+
+1. **Book**
+   - Represents the book entity in the system.
+   - Attributes:
+     - `bookId: String`
+     - `title: String`
+     - `author: String`
+     - `type: String` (e.g., fiction, non-fiction)
+     - `price: double`
+     - `isbn: String`
+     - `publisher: String`
+     - `dateOnboarded: Date`
+     - `numberOfPages: int`
+
+2. **User (Abstract Class)**
+   - Base class for users in the system (can be extended for different types of users).
+   - Attributes:
+     - `userId: String`
+     - `name: String`
+     - `email: String`
+     - `mobileNumber: String`
+     - `address: String`
+   - Methods:
+     - `searchBook(String title)`
+     - `searchByAuthor(String author)`
+     - `searchByType(String type)`
+
+3. **Customer (Extends User)**
+   - A specific type of user who can purchase books.
+   - Attributes: (inherits from `User`)
+   - Methods:
+     - `addToCart(Book book)`
+     - `placeOrder(Cart cart)`
+     - `viewOrders()`
+   - Relationships:
+     - Has multiple `Order`s and a `Cart`.
+
+4. **Admin (Extends User)**
+   - A specific type of user who manages the inventory.
+   - Attributes: (inherits from `User`)
+   - Methods:
+     - `addBook(Book book)`
+     - `deleteBook(String bookId)`
+     - `updateBook(Book book)`
+     - `viewAllBooks()`
+
+5. **Order**
+   - Represents a transaction made by a customer.
+   - Attributes:
+     - `orderId: String`
+     - `customer: Customer`
+     - `books: List<Book>` (Composition relationship: Order contains multiple books)
+     - `totalAmount: double`
+     - `orderDate: Date`
+     - `status: String` (e.g., "Shipped", "Delivered", "Cancelled")
+   - Relationships:
+     - `Order` is associated with `Customer`.
+
+6. **Cart**
+   - Represents a temporary collection of books selected by the customer for purchase.
+   - Attributes:
+     - `customer: Customer`
+     - `booksInCart: List<Book>` (Composition relationship: Cart contains multiple books)
+     - `totalCost: double`
+   - Methods:
+     - `addBookToCart(Book book)`
+     - `removeBookFromCart(Book book)`
+     - `getTotalCost()`
+   - Relationships:
+     - `Cart` is associated with `Customer`.
+
+7. **Payment**
+   - Handles payments for orders.
+   - Attributes:
+     - `paymentId: String`
+     - `orderId: String`
+     - `paymentType: String` (e.g., "CreditCard", "PayPal")
+     - `amount: double`
+     - `paymentStatus: String` (e.g., "Successful", "Failed")
+   - Relationships:
+     - `Payment` is linked to an `Order`.
+
+8. **OnlineBookStore**
+   - Main class that holds the list of books, users, and other core entities.
+   - Attributes:
+     - `books: List<Book>`
+     - `customers: List<Customer>`
+     - `admins: List<Admin>`
+   - Methods:
+     - `getBooksByAuthor(String author)`
+     - `getBooksByType(String type)`
+     - `getAllBooks()`
+
+### Class Diagram (Overview)
+```plaintext
+                    User (Abstract)
+                    /        \
+           Customer           Admin
+               |                |
+          +-----+-------+    +---+-------+
+          | Cart         |    | AdminOps |
+          | Order        |    +-----------+
+          +--------------+
+             |               |
+           Order         Payment
+             |
+          +--------+            
+          | Books  |
+          +--------+
+
+        OnlineBookStore
+            |
+         +-------+
+         | Books |
+         +-------+
+```
+
+### Explanation of Relationships
+
+1. **Composition**:
+   - **Cart contains Books**: A cart has a list of books that the customer adds before purchasing.
+   - **Order contains Books**: An order is made up of multiple books.
+   
+2. **Association**:
+   - **Customer has Cart**: Each customer has a cart, allowing them to add/remove books before purchase.
+   - **Customer places Orders**: A customer can place multiple orders.
+   - **Payment is associated with an Order**: Each payment belongs to a specific order.
+
+3. **Inheritance**:
+   - **User is the base class**: Both `Customer` and `Admin` inherit from `User` to reuse common attributes like `userId`, `name`, etc.
+   - **Payment types**: Different payment methods (like Credit Card, PayPal, etc.) could be implemented using subclasses of `PaymentType`.
+
+### Summary of Operations
+
+#### For **Customer**:
+- **Search books**: `searchBook(String title)`, `searchByAuthor(String author)`, `searchByType(String type)`
+- **Shopping**: `addToCart(Book book)`, `placeOrder(Cart cart)`, `viewOrders()`
+
+#### For **Admin**:
+- **Manage books**: `addBook(Book book)`, `deleteBook(String bookId)`, `updateBook(Book book)`
+- **View inventory**: `viewAllBooks()`
+
+#### For **Cart**:
+- **Manage cart**: `addBookToCart(Book book)`, `removeBookFromCart(Book book)`, `getTotalCost()`
+
+#### For **Order**:
+- **Order details**: `getTotalAmount()`, `getOrderStatus()`
+
+#### For **Payment**:
+- **Make payment**: `payForOrder()`
+
+### Enhancements You Can Consider:
+- **Discount system**: Add a `Discount` class for promotions and special offers.
+- **Review and Rating**: Implement a review system where customers can rate and review books.
+- **Recommendation system**: Add book recommendations based on customer purchase history or similar purchases by other users.
+
+With this detailed breakdown of classes and relationships, the **Online Bookstore** design will be robust, easy to extend, and scalable. Feel free to adjust the design based on any new requirements or feedback!
